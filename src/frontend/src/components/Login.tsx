@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { TextField, Button, Container, Typography, Box } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 function Login() {
   const [username, setUsername] = useState<string>("");
@@ -53,11 +53,16 @@ function Login() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </Box>
-          <Button type="submit" variant="contained" color="primary">
+          <Button type="submit" variant="contained" color="primary" fullWidth>
             Login
           </Button>
         </form>
         {message && <Typography color="error">{message}</Typography>}
+        <Box mt={2}>
+          <Typography variant="body1">
+            Don't have an account? <Link to="/register">Register</Link>
+          </Typography>
+        </Box>
       </Box>
     </Container>
   );
