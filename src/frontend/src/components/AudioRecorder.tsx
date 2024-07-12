@@ -1,6 +1,5 @@
 import React, { useState, useRef } from "react";
 import { Button, Container, Typography } from "@mui/material";
-import APIService from "../services/APIService";
 
 interface RecorderProps {
     onUploadSuccess: (message: string) => void;
@@ -14,35 +13,40 @@ const AudioRecorder: React.FC<RecorderProps> = ({ onUploadSuccess }) => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const handleStartRecording = () => {
-        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-            const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-            setMediaRecorder(recorder);
-            setRecording(true);
-            recorder.start();
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then((stream) => {
+                const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+                setMediaRecorder(recorder);
+                setRecording(true);
+                recorder.start();
 
-            const audioChunks: Blob[] = [];
+                const audioChunks: Blob[] = [];
 
-            recorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    audioChunks.push(event.data);
-                }
-            };
+                recorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
 
-            recorder.onstop = () => {
-                setRecording(false);
-                const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-                setAudioBlob(audioBlob);
-                if (audioRef.current) {
-                    audioRef.current.src = URL.createObjectURL(audioBlob);
-                }
-            };
+                recorder.onstop = () => {
+                    setRecording(false);
+                    const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+                    setAudioBlob(audioBlob);
+                    if (audioRef.current) {
+                        audioRef.current.src = URL.createObjectURL(audioBlob);
+                    }
+                };
 
-            setTimeout(() => {
-                if (recorder.state === "recording") {
-                    recorder.stop();
-                }
-            }, 15000); // Stop recording after 15 seconds
-        });
+                setTimeout(() => {
+                    if (recorder.state === "recording") {
+                        recorder.stop();
+                    }
+                }, 15000); // Stop recording after 15 seconds
+            })
+            .catch((err) => {
+                console.error("Error accessing media devices.", err);
+                setMessage("Error accessing media devices.");
+            });
     };
 
     const handleStopRecording = () => {
@@ -57,11 +61,15 @@ const AudioRecorder: React.FC<RecorderProps> = ({ onUploadSuccess }) => {
             formData.append("audio", audioBlob, "recording.webm");
 
             try {
-                const response = await APIService.request("/upload", "POST", formData, true);
+                const response = await fetch("http://localhost:3002/upload", {
+                    method: "POST",
+                    body: formData,
+                });
                 const data = await response.json();
                 setMessage(data.message);
                 onUploadSuccess(data.message);
             } catch (error) {
+                console.error("Failed to upload audio", error);
                 setMessage("Failed to upload audio");
             }
         }
@@ -90,6 +98,7 @@ const AudioRecorder: React.FC<RecorderProps> = ({ onUploadSuccess }) => {
             </Button>
             <Button
                 variant="contained"
+                color="primary"
                 onClick={handleUpload}
                 disabled={!audioBlob}
             >

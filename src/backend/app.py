@@ -105,9 +105,35 @@ def create_app():
             user_data = {
                 "id": user.id,
                 "username": user.username,
+                "motto": user.motto,  # Ensure this is returned
             }
             return jsonify(user_data), 200
         return jsonify({"message": "User not found"}), 404
+
+    @app.route("/upload", methods=["POST"])
+    @jwt_required()
+    def upload():
+        if "audio" not in request.files:
+            return jsonify({"message": "No audio file provided"}), 400
+        audio_file = request.files["audio"]
+
+        # Mocking transcription service call
+        transcription = mock_transcription_service(audio_file)
+
+        current_user = get_jwt_identity()
+        user = User.query.filter_by(username=current_user["username"]).first()
+        if user:
+            user.motto = transcription
+            db.session.commit()
+            return (
+                jsonify({"message": "Audio uploaded and transcribed successfully"}),
+                200,
+            )
+        return jsonify({"message": "User not found"}), 404
+
+    def mock_transcription_service(audio_file):
+        # For simplicity, let's assume the audio is always successfully transcribed to "Hello, this is a mock transcription."
+        return "Hello, this is a mock transcription."
 
     return app
 
@@ -116,6 +142,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
+    motto = db.Column(db.String(500), nullable=True)  # Adding a motto field
 
 
 if __name__ == "__main__":

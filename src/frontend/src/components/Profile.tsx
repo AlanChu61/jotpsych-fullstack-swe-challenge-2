@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Typography, Box, Avatar, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import APIService from "../services/APIService";
 import AudioRecorder from "./AudioRecorder";
 
 const Profile: React.FC = () => {
@@ -16,12 +15,22 @@ const Profile: React.FC = () => {
 
     const fetchUser = async () => {
         try {
-            const data = await APIService.request("/user", "GET", null, true);
-            setUser({
-                username: data.username,
-                profile_photo: data.profile_photo,
-                motto: data.motto,
+            const response = await fetch("http://localhost:3002/user", {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    "app-version": "1.2.0"
+                }
             });
+            const data = await response.json();
+            if (response.ok) {
+                setUser({
+                    username: data.username,
+                    profile_photo: data.profile_photo,
+                    motto: data.motto,
+                });
+            } else {
+                setMessage(data.message);
+            }
         } catch (error: any) {
             setMessage(error.message);
         }
