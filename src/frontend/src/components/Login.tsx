@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { TextField, Button, Container, Typography, Box } from "@mui/material";
 import { useNavigate, Link } from "react-router-dom";
+import APIService from "../services/APIService";
 
 function Login() {
   const [username, setUsername] = useState<string>("");
@@ -10,20 +11,13 @@ function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const response = await fetch("http://localhost:3002/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, password }),
-    });
-    const data = await response.json();
-    if (response.ok) {
-      localStorage.setItem("token", data.token); // Store the token
+    try {
+      const data = await APIService.request("/login", "POST", { username, password });
+      localStorage.setItem("token", data.token);
       setMessage("Login successful");
-      navigate("/profile"); // Redirect to profile page after login
-    } else {
-      setMessage(data.message);
+      navigate("/profile");
+    } catch (error: any) {
+      setMessage(error.message);
     }
   };
 

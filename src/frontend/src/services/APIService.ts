@@ -5,7 +5,7 @@ class APIService {
 
   private constructor() {
     this.baseUrl = "http://localhost:3002";
-    this.appVersion = "1.0.0";
+    this.appVersion = "1.2.0";  // Ensure this version is at least 1.2.0
   }
 
   public static getInstance(): APIService {
@@ -27,7 +27,7 @@ class APIService {
     };
 
     if (auth) {
-      // get access token somehow
+      const token = localStorage.getItem("token");
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
       }
@@ -40,6 +40,9 @@ class APIService {
     });
 
     if (!response.ok) {
+      if (response.status === 426) {
+        throw new Error("Please update your client application.");
+      }
       throw new Error("Network response was not ok");
     }
 

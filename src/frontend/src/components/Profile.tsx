@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Typography, Box, Avatar, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import APIService from "../services/APIService";
 
 const Profile: React.FC = () => {
     const [user, setUser] = useState<{ username: string; profile_photo: string; motto: string }>({
@@ -8,26 +9,20 @@ const Profile: React.FC = () => {
         profile_photo: "",
         motto: "",
     });
+    const [message, setMessage] = useState<string>("");
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchUser = async () => {
-            const token = localStorage.getItem("token");
-
-            if (token) {
-                const response = await fetch("http://localhost:3002/user", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+            try {
+                const data = await APIService.request("/user", "GET", null, true);
+                setUser({
+                    username: data.username,
+                    profile_photo: data.profile_photo,
+                    motto: data.motto,
                 });
-                const data = await response.json();
-                if (response.ok) {
-                    setUser({
-                        username: data.username,
-                        profile_photo: data.profile_photo,
-                        motto: data.motto,
-                    });
-                }
+            } catch (error: any) {
+                setMessage(error.message);
             }
         };
 
@@ -49,6 +44,7 @@ const Profile: React.FC = () => {
                 <Typography variant="h6" component="p" mt={4} mb={4}>
                     "{user.motto}"
                 </Typography>
+                {message && <Typography color="error">{message}</Typography>}
                 <Box display="flex" justifyContent="space-between" width="100%">
                     <Button variant="contained" color="primary">
                         Record (New) Motto

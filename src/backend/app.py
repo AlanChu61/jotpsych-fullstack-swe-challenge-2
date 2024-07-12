@@ -8,12 +8,15 @@ from flask_jwt_extended import (
     get_jwt_identity,
 )
 from flask_cors import CORS
+from functools import wraps
 
 import os
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 jwt = JWTManager()
+
+MINIMUM_APP_VERSION = "1.2.0"
 
 
 def create_app():
@@ -26,7 +29,7 @@ def create_app():
     CORS(
         app,
         resources={r"*": {"origins": ["*"]}},
-        allow_headers=["Authorization", "Content-Type"],
+        allow_headers=["Authorization", "Content-Type", "app-version"],
         methods=["GET", "POST", "OPTIONS"],
         max_age=86400,
     )
@@ -38,11 +41,33 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+    def check_app_version(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            app_version = request.headers.get("app-version")
+            if (
+                not app_version
+                or compare_versions(app_version, MINIMUM_APP_VERSION) < 0
+            ):
+                return (
+                    jsonify({"message": "Please update your client application."}),
+                    426,
+                )
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    def compare_versions(version1, version2):
+        v1 = list(map(int, version1.split(".")))
+        v2 = list(map(int, version2.split(".")))
+        return (v1 > v2) - (v1 < v2)  # Returns 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+
     @app.route("/")
     def index():
         return jsonify({"status": 200})
 
     @app.route("/register", methods=["POST"])
+    @check_app_version
     def register():
         data = request.get_json()
         user = User.query.filter_by(username=data["username"]).first()
@@ -61,6 +86,7 @@ def create_app():
         )
 
     @app.route("/login", methods=["POST"])
+    @check_app_version
     def login():
         data = request.get_json()
         user = User.query.filter_by(username=data["username"]).first()
@@ -71,6 +97,7 @@ def create_app():
 
     @app.route("/user", methods=["GET"])
     @jwt_required()
+    @check_app_version
     def user():
         current_user = get_jwt_identity()
         user = User.query.filter_by(username=current_user["username"]).first()

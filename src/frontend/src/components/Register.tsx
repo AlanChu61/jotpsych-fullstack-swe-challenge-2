@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { TextField, Button, Container, Typography, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import APIService from "../services/APIService";
 
 function Register() {
   const [username, setUsername] = useState<string>("");
@@ -10,20 +11,13 @@ function Register() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    const response = await fetch("http://localhost:3002/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, password }),
-    });
-    const data = await response.json();
-    if (response.ok) {
-      localStorage.setItem("token", data.token); // Store the token
+    try {
+      const data = await APIService.request("/register", "POST", { username, password });
+      localStorage.setItem("token", data.token);
       setMessage("Registration successful");
-      navigate("/profile"); // Redirect to profile page after registration
-    } else {
-      setMessage(data.message);
+      navigate("/profile");
+    } catch (error: any) {
+      setMessage(error.message);
     }
   };
 
