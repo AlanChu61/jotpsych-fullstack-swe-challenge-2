@@ -9,7 +9,6 @@ from flask_jwt_extended import (
 )
 from flask_cors import CORS
 from functools import wraps
-
 import os
 
 db = SQLAlchemy()

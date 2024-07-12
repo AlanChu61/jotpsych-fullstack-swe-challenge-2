@@ -61,8 +61,12 @@ const AudioRecorder: React.FC<RecorderProps> = ({ onUploadSuccess }) => {
             formData.append("audio", audioBlob, "recording.webm");
 
             try {
+                const token = localStorage.getItem("token");  // 获取存储的JWT令牌
                 const response = await fetch("http://localhost:3002/upload", {
                     method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
                     body: formData,
                 });
                 const data = await response.json();
