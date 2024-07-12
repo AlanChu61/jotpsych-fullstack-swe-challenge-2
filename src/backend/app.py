@@ -10,6 +10,9 @@ from flask_jwt_extended import (
 from flask_cors import CORS
 from functools import wraps
 import base64
+import asyncio
+import random
+import threading
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -119,20 +122,25 @@ def create_app():
             return jsonify({"message": "No audio file provided"}), 400
         audio_file = request.files["audio"]
 
-        # Mocking transcription service call
-        transcription = mock_transcription_service(audio_file)
-
         current_user = get_jwt_identity()
         user = User.query.filter_by(username=current_user["username"]).first()
         if user:
-            encrypted_motto = base64.b64encode(transcription.encode()).decode()
-            user.motto = encrypted_motto
-            db.session.commit()
-            return (
-                jsonify({"message": "Audio uploaded and transcribed successfully"}),
-                200,
+            thread = threading.Thread(
+                target=process_transcription, args=(audio_file, user)
             )
+            thread.start()
+            return jsonify({"message": "Audio uploaded and processing started"}), 200
         return jsonify({"message": "User not found"}), 404
+
+    def process_transcription(audio_file, user):
+        # Simulate a delay for the transcription service
+        delay = random.randint(5, 15)
+        asyncio.run(asyncio.sleep(delay))
+        transcription = mock_transcription_service(audio_file)
+
+        encrypted_motto = base64.b64encode(transcription.encode()).decode()
+        user.motto = encrypted_motto
+        db.session.commit()
 
     def mock_transcription_service(audio_file):
         # For simplicity, let's assume the audio is always successfully transcribed to "Hello, this is a mock transcription."
