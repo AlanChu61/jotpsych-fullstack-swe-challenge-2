@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Container, Typography, Box, Avatar, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import APIService from "../services/APIService";
+import AudioRecorder from "./AudioRecorder";
 
 const Profile: React.FC = () => {
     const [user, setUser] = useState<{ username: string; profile_photo: string; motto: string }>({
@@ -10,28 +11,35 @@ const Profile: React.FC = () => {
         motto: "",
     });
     const [message, setMessage] = useState<string>("");
+    const [showRecorder, setShowRecorder] = useState<boolean>(false);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const data = await APIService.request("/user", "GET", null, true);
-                setUser({
-                    username: data.username,
-                    profile_photo: data.profile_photo,
-                    motto: data.motto,
-                });
-            } catch (error: any) {
-                setMessage(error.message);
-            }
-        };
+    const fetchUser = async () => {
+        try {
+            const data = await APIService.request("/user", "GET", null, true);
+            setUser({
+                username: data.username,
+                profile_photo: data.profile_photo,
+                motto: data.motto,
+            });
+        } catch (error: any) {
+            setMessage(error.message);
+        }
+    };
 
+    useEffect(() => {
         fetchUser();
     }, []);
 
     const handleLogout = () => {
         localStorage.removeItem("token");
         navigate("/login");
+    };
+
+    const handleUploadSuccess = (message: string) => {
+        setMessage(message);
+        setShowRecorder(false);
+        fetchUser();
     };
 
     return (
@@ -45,14 +53,29 @@ const Profile: React.FC = () => {
                     "{user.motto}"
                 </Typography>
                 {message && <Typography color="error">{message}</Typography>}
-                <Box display="flex" justifyContent="space-between" width="100%">
-                    <Button variant="contained" color="primary">
+                <Box display="flex" justifyContent="space-between" width="100%" mt={4}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => setShowRecorder(true)}
+                        sx={{ backgroundColor: 'green', color: 'white' }}
+                    >
                         Record (New) Motto
                     </Button>
-                    <Button variant="contained" color="secondary" onClick={handleLogout}>
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={handleLogout}
+                        sx={{ backgroundColor: 'red', color: 'white' }}
+                    >
                         Logout
                     </Button>
                 </Box>
+                {showRecorder && (
+                    <Box mt={4}>
+                        <AudioRecorder onUploadSuccess={handleUploadSuccess} />
+                    </Box>
+                )}
             </Box>
         </Container>
     );

@@ -13,7 +13,7 @@ const App: React.FC = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<Home />} />
       <Route path="/logout" element={<Logout />} />
-      <Route path="/profile" element={<Profile />} /> {/* Add the Profile route */}
+      <Route path="/profile" element={<Profile />} />
     </Routes>
   );
 }
