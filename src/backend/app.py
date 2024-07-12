@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import (
@@ -6,8 +6,6 @@ from flask_jwt_extended import (
     create_access_token,
     jwt_required,
     get_jwt_identity,
-    set_access_cookies,
-    unset_jwt_cookies,
 )
 from flask_cors import CORS
 
@@ -57,9 +55,10 @@ def create_app():
         db.session.add(new_user)
         db.session.commit()
         access_token = create_access_token(identity={"username": new_user.username})
-        response = jsonify({"message": "User registered successfully"})
-        set_access_cookies(response, access_token)
-        return response, 201
+        return (
+            jsonify({"message": "User registered successfully", "token": access_token}),
+            201,
+        )
 
     @app.route("/login", methods=["POST"])
     def login():
@@ -67,17 +66,8 @@ def create_app():
         user = User.query.filter_by(username=data["username"]).first()
         if user and bcrypt.check_password_hash(user.password, data["password"]):
             access_token = create_access_token(identity={"username": user.username})
-            response = jsonify({"token": access_token})
-            set_access_cookies(response, access_token)
-            return response, 200
+            return jsonify({"token": access_token}), 200
         return jsonify({"message": "Invalid credentials"}), 401
-
-    @app.route("/logout", methods=["POST"])
-    @jwt_required()
-    def logout():
-        response = jsonify({"message": "Logout successful"})
-        unset_jwt_cookies(response)
-        return response, 200
 
     @app.route("/user", methods=["GET"])
     @jwt_required()

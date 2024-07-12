@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { TextField, Button, Container, Typography, Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [message, setMessage] = useState<string>("");
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,6 +21,7 @@ function Login() {
     if (response.ok) {
       localStorage.setItem("token", data.token); // Store the token
       setMessage("Login successful");
+      navigate("/profile"); // Redirect to profile page after login
     } else {
       setMessage(data.message);
     }

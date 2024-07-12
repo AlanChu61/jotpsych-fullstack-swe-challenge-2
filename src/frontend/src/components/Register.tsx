@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { TextField, Button, Container, Typography, Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 function Register() {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [message, setMessage] = useState<string>("");
+  const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,7 +18,13 @@ function Register() {
       body: JSON.stringify({ username, password }),
     });
     const data = await response.json();
-    setMessage(data.message);
+    if (response.ok) {
+      localStorage.setItem("token", data.token); // Store the token
+      setMessage("Registration successful");
+      navigate("/profile"); // Redirect to profile page after registration
+    } else {
+      setMessage(data.message);
+    }
   };
 
   return (
