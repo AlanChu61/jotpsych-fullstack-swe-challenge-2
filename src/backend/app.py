@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import (
@@ -6,6 +6,8 @@ from flask_jwt_extended import (
     create_access_token,
     jwt_required,
     get_jwt_identity,
+    set_access_cookies,
+    unset_jwt_cookies,
 )
 from flask_cors import CORS
 
@@ -45,13 +47,19 @@ def create_app():
     @app.route("/register", methods=["POST"])
     def register():
         data = request.get_json()
+        user = User.query.filter_by(username=data["username"]).first()
+        if user:
+            return jsonify({"message": "Username already exists"}), 400
         hashed_password = bcrypt.generate_password_hash(data["password"]).decode(
             "utf-8"
         )
         new_user = User(username=data["username"], password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({"message": "User registered successfully"}), 201
+        access_token = create_access_token(identity={"username": new_user.username})
+        response = jsonify({"message": "User registered successfully"})
+        set_access_cookies(response, access_token)
+        return response, 201
 
     @app.route("/login", methods=["POST"])
     def login():
@@ -59,8 +67,17 @@ def create_app():
         user = User.query.filter_by(username=data["username"]).first()
         if user and bcrypt.check_password_hash(user.password, data["password"]):
             access_token = create_access_token(identity={"username": user.username})
-            return jsonify({"token": access_token}), 200
+            response = jsonify({"token": access_token})
+            set_access_cookies(response, access_token)
+            return response, 200
         return jsonify({"message": "Invalid credentials"}), 401
+
+    @app.route("/logout", methods=["POST"])
+    @jwt_required()
+    def logout():
+        response = jsonify({"message": "Logout successful"})
+        unset_jwt_cookies(response)
+        return response, 200
 
     @app.route("/user", methods=["GET"])
     @jwt_required()
@@ -68,7 +85,11 @@ def create_app():
         current_user = get_jwt_identity()
         user = User.query.filter_by(username=current_user["username"]).first()
         if user:
-            return jsonify({"id": user.id, "username": user.username}), 200
+            user_data = {
+                "id": user.id,
+                "username": user.username,
+            }
+            return jsonify(user_data), 200
         return jsonify({"message": "User not found"}), 404
 
     return app
