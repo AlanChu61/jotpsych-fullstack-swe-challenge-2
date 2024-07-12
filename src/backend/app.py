@@ -110,7 +110,7 @@ def create_app():
             user_data = {
                 "id": user.id,
                 "username": user.username,
-                "motto": decrypted_motto,  # Ensure this is returned
+                "motto": decrypted_motto,
             }
             return jsonify(user_data), 200
         return jsonify({"message": "User not found"}), 404

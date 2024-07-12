@@ -84,7 +84,7 @@ const AudioRecorder: React.FC<RecorderProps> = ({ onUploadSuccess }) => {
             formData.append("audio", audioBlob, "recording.webm");
 
             try {
-                const token = localStorage.getItem("token");  // 获取存储的JWT令牌
+                const token = localStorage.getItem("token");
                 if (!token) {
                     setMessage("No authentication token found. Please login again.");
                     setIsUploading(false);
@@ -106,7 +106,7 @@ const AudioRecorder: React.FC<RecorderProps> = ({ onUploadSuccess }) => {
                 const data = await response.json();
                 setMessage(data.message);
                 setIsUploading(false);
-                onUploadSuccess(data.message, data.motto);  // 调用上传成功的回调函数，并传递新的motto
+                onUploadSuccess(data.message, data.motto);
             } catch (error) {
                 console.error("Failed to upload audio", error);
                 setMessage("Failed to upload audio");
