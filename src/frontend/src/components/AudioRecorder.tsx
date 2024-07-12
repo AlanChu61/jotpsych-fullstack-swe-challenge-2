@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { Button, Container, Typography } from "@mui/material";
+import React, { useState, useRef, useEffect } from "react";
+import { Button, Container, Typography, Box } from "@mui/material";
 
 interface RecorderProps {
     onUploadSuccess: (message: string) => void;
@@ -10,7 +10,29 @@ const AudioRecorder: React.FC<RecorderProps> = ({ onUploadSuccess }) => {
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
     const [message, setMessage] = useState<string>("");
+    const [seconds, setSeconds] = useState<number>(0);
+    const timerRef = useRef<number | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    useEffect(() => {
+        if (recording) {
+            timerRef.current = window.setInterval(() => {
+                setSeconds(prev => prev + 1);
+                if (audioRef.current) {
+                    audioRef.current.currentTime = prev + 1;
+                }
+            }, 1000);
+        } else if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        };
+    }, [recording]);
 
     const handleStartRecording = () => {
         navigator.mediaDevices.getUserMedia({ audio: true })
@@ -18,6 +40,7 @@ const AudioRecorder: React.FC<RecorderProps> = ({ onUploadSuccess }) => {
                 const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
                 setMediaRecorder(recorder);
                 setRecording(true);
+                setSeconds(0);
                 recorder.start();
 
                 const audioChunks: Blob[] = [];
@@ -108,7 +131,9 @@ const AudioRecorder: React.FC<RecorderProps> = ({ onUploadSuccess }) => {
             >
                 Upload
             </Button>
-            <audio ref={audioRef} controls />
+            <audio ref={audioRef} controls>
+                <source src={audioBlob ? URL.createObjectURL(audioBlob) : ""} type="audio/webm" />
+            </audio>
             {message && <Typography color="error">{message}</Typography>}
         </Container>
     );

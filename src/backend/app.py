@@ -9,7 +9,7 @@ from flask_jwt_extended import (
 )
 from flask_cors import CORS
 from functools import wraps
-import os
+import base64
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -101,10 +101,13 @@ def create_app():
         current_user = get_jwt_identity()
         user = User.query.filter_by(username=current_user["username"]).first()
         if user:
+            decrypted_motto = (
+                base64.b64decode(user.motto).decode() if user.motto else None
+            )
             user_data = {
                 "id": user.id,
                 "username": user.username,
-                "motto": user.motto,  # Ensure this is returned
+                "motto": decrypted_motto,  # Ensure this is returned
             }
             return jsonify(user_data), 200
         return jsonify({"message": "User not found"}), 404
@@ -122,7 +125,8 @@ def create_app():
         current_user = get_jwt_identity()
         user = User.query.filter_by(username=current_user["username"]).first()
         if user:
-            user.motto = transcription
+            encrypted_motto = base64.b64encode(transcription.encode()).decode()
+            user.motto = encrypted_motto
             db.session.commit()
             return (
                 jsonify({"message": "Audio uploaded and transcribed successfully"}),
