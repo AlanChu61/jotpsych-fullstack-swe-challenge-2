@@ -125,22 +125,27 @@ def create_app():
         current_user = get_jwt_identity()
         user = User.query.filter_by(username=current_user["username"]).first()
         if user:
-            thread = threading.Thread(
-                target=process_transcription, args=(audio_file, user)
+            result = process_transcription(audio_file)
+            encrypted_motto = base64.b64encode(result.encode()).decode()
+            user.motto = encrypted_motto
+            db.session.commit()
+            return (
+                jsonify(
+                    {
+                        "message": "Audio uploaded and processed successfully",
+                        "motto": result,
+                    }
+                ),
+                200,
             )
-            thread.start()
-            return jsonify({"message": "Audio uploaded and processing started"}), 200
         return jsonify({"message": "User not found"}), 404
 
-    def process_transcription(audio_file, user):
+    def process_transcription(audio_file):
         # Simulate a delay for the transcription service
         delay = random.randint(5, 15)
         asyncio.run(asyncio.sleep(delay))
         transcription = mock_transcription_service(audio_file)
-
-        encrypted_motto = base64.b64encode(transcription.encode()).decode()
-        user.motto = encrypted_motto
-        db.session.commit()
+        return transcription
 
     def mock_transcription_service(audio_file):
         # For simplicity, let's assume the audio is always successfully transcribed to "Hello, this is a mock transcription."
