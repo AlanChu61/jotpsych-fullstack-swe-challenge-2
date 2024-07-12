@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { TextField, Button, Container, Typography, Box } from "@mui/material";
 
 function Login() {
   const [username, setUsername] = useState<string>("");
@@ -16,8 +17,7 @@ function Login() {
     });
     const data = await response.json();
     if (response.ok) {
-      // do something with access token
-
+      localStorage.setItem("token", data.token); // Store the token
       setMessage("Login successful");
     } else {
       setMessage(data.message);
@@ -25,29 +25,38 @@ function Login() {
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
-        <div>
-          <label>Username:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </div>
-        <div>
-          <label>Password:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <button type="submit">Login</button>
-      </form>
-      {message && <p>{message}</p>}
-    </div>
+    <Container maxWidth="sm">
+      <Box mt={4}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Login
+        </Typography>
+        <form onSubmit={handleLogin}>
+          <Box mb={2}>
+            <TextField
+              label="Username"
+              variant="outlined"
+              fullWidth
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </Box>
+          <Box mb={2}>
+            <TextField
+              label="Password"
+              type="password"
+              variant="outlined"
+              fullWidth
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </Box>
+          <Button type="submit" variant="contained" color="primary">
+            Login
+          </Button>
+        </form>
+        {message && <Typography color="error">{message}</Typography>}
+      </Box>
+    </Container>
   );
 }
 

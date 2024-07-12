@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { TextField, Button, Container, Typography, Box } from "@mui/material";
 
 function Register() {
   const [username, setUsername] = useState<string>("");
@@ -19,29 +20,38 @@ function Register() {
   };
 
   return (
-    <div>
-      <h2>Register</h2>
-      <form onSubmit={handleRegister}>
-        <div>
-          <label>Username:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </div>
-        <div>
-          <label>Password:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <button type="submit">Register</button>
-      </form>
-      {message && <p>{message}</p>}
-    </div>
+    <Container maxWidth="sm">
+      <Box mt={4}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Register
+        </Typography>
+        <form onSubmit={handleRegister}>
+          <Box mb={2}>
+            <TextField
+              label="Username"
+              variant="outlined"
+              fullWidth
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </Box>
+          <Box mb={2}>
+            <TextField
+              label="Password"
+              type="password"
+              variant="outlined"
+              fullWidth
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </Box>
+          <Button type="submit" variant="contained" color="primary">
+            Register
+          </Button>
+        </form>
+        {message && <Typography color="error">{message}</Typography>}
+      </Box>
+    </Container>
   );
 }
 
