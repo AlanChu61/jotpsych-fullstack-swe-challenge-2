@@ -6,13 +6,15 @@ function Home() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      // get access token
+      // Assuming you store the token in localStorage
+      const token = localStorage.getItem("token");
 
       if (token) {
         const response = await fetch("http://localhost:3002/user", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
         });
         const data = await response.json();
         if (response.ok) {
@@ -28,7 +30,10 @@ function Home() {
     <div>
       <h2>Home</h2>
       {username ? (
-        <p>Welcome, {username}!</p>
+        <div>
+          <p>Welcome, {username}!</p>
+          <Link to="/logout">Logout</Link>
+        </div>
       ) : (
         <p>
           Please <Link to="/login">login</Link> or{" "}
